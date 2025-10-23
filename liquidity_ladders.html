@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Liquidity Ladders</title>
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: #fff;
+    margin: 0;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    color: #000;
+  }
+
+  h1 {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  .controls {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .controls input, .controls select, .controls button {
+    margin: 10px;
+    padding: 8px 12px;
+    font-size: 1rem;
+  }
+
+  #ladderTable {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  table {
+    border-collapse: collapse;
+    margin-top: 20px;
+    width: 80%; /* Adjust width for better sizing */
+    max-width: 1000px;
+    text-align: center;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    font-size: 0.95rem;
+  }
+
+  th {
+    background: #f0f0f0;
+    position: relative;
+  }
+
+  .tooltip {
+    border-bottom: 1px dotted #333;
+    cursor: help;
+  }
+
+  #loading {
+    margin-top: 10px;
+    color: #0078D4;
+    text-align: center;
+  }
+</style>
+<!-- PapaParse for CSV parsing -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+<div class="container">
+  <h1>Liquidity Ladders</h1>
+	<div class="controls">
+	  <input type="file" id="fileInput" accept=".csv" />
+	  <label>Date: <select id="dateSelect"></select></label>
+	  <label>Fund Code: <input type="text" id="fundSearch" placeholder = "Fund Search"></select></label>
+	  <button id="exportBtn" disabled>Export Filtered Ladder (CSV)</button>
+	  <button id="copyBtn" disabled>Copy Table</button>
+	</div>
+
+	<div id="ladderTable"></div>
+	<div id="loading"></div>
+  <p><a href="contents.html">Back to Contents</a></p>
+</div>
+<script>
+const tooltips = {
+  "1 Day Percent": "Percent liquid in 1 business day (normal market)",
+  "5 Day Percent": "Percent liquid in 5 business days (normal market)",
+  "20 Day Percent": "Percent liquid in 20 business days (normal market)",
+  "60 Day Percent": "Percent liquid in 60 business days (normal market)",
+  "120 Day Percent": "Percent liquid in 120 business days (normal market)",
+  "1 Year Percent": "Percent liquid in 1 year (normal market)"
+};
+
+let laddersData = [];
+let filteredData = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loading').textContent = "Loading ladders data...";
+  fetch('ladders.csv')
+    .then(response => response.text())
+    .then(csv => {
+      laddersData = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
+      populateDropdowns();
+      renderTable();
+      document.getElementById('loading').textContent = "";
+      document.getElementById('exportBtn').disabled = false;
+      document.getElementById('copyBtn').disabled = false;
+    })
+    .catch(() => {
+      document.getElementById('loading').textContent = "Failed to load ladders data.";
+    });
+});
+
+function populateDropdowns() {
+  const dateSelect = document.getElementById('dateSelect');
+  const dates = [...new Set(laddersData.map(row => row['Business Day']))].filter(Boolean);
+  dateSelect.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
+  dateSelect.onchange = renderTable;
+}
+document.getElementById('fundSearch').addEventListener('input', renderTable);
+
+function renderTable() {
+  const date = document.getElementById('dateSelect').value;
+  const fundQuery = document.getElementById('fundSearch').value.toLowerCase();
+
+  filteredData = laddersData.filter(row => {
+    const matchesDate = date ? row['Business Day'] === date : true;
+    const matchesFund = fundQuery ? row['Portfolio'].toLowerCase().includes(fundQuery) : true;
+    return matchesDate && matchesFund;
+  });
+
+  document.getElementById('exportBtn').disabled = !filteredData.length;
+  document.getElementById('copyBtn').disabled = !filteredData.length;
+
+  if (!filteredData.length) {
+    document.getElementById('ladderTable').innerHTML = "<p>No data for this selection.</p>";
+    return;
+  }
+
+  const columns = Object.keys(filteredData[0]);
+  let html = '<table id="ladderTableTable"><thead><tr>';
+  columns.forEach(col => {
+    html += `<th ${tooltips[col] ? `title="${tooltips[col]}"` : ''}>${col}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+  filteredData.forEach(row => {
+    html += '<tr>';
+    columns.forEach(col => {
+      html += `<td>${row[col] || ''}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('ladderTable').innerHTML = html;
+}
+
+function exportCSV() {
+  if (!filteredData.length) return;
+  const columns = Object.keys(filteredData[0]);
+  const rows = [columns.join(',')];
+  filteredData.forEach(row => {
+    rows.push(columns.map(col => `"${row[col] !== undefined ? row[col] : ''}"`).join(','));
+  });
+  const csvContent = rows.join('\r\n');
+  const blob = new Blob([csvContent], {type: "text/csv;charset=utf-8"});
+  if (window.navigator.msSaveOrOpenBlob) {
+    window.navigator.msSaveBlob(blob, "filtered_liquidity_ladder.csv");
+  } else {
+    const a = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = "filtered_liquidity_ladder.csv";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 0);
+  }
+}
+
+function copyTable() {
+  const table = document.getElementById('ladderTableTable');
+  if (!table) return;
+  let range, selection;
+  if (document.createRange && window.getSelection) {
+    range = document.createRange();
+    selection = window.getSelection();
+    selection.removeAllRanges();
+    try {
+      range.selectNodeContents(table);
+      selection.addRange(range);
+    } catch (err) {
+      range.selectNode(table);
+      selection.addRange(range);
+    }
+    document.execCommand('copy');
+    selection.removeAllRanges();
+    alert('Table copied to clipboard!');
+  }
+}
+
+document.getElementById('exportBtn').addEventListener('click', exportCSV, false);
+document.getElementById('copyBtn').addEventListener('click', copyTable, false);
+</script>
+</body>
+</html>
+

@@ -1,0 +1,214 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Contents Page</title>
+  <style>
+	  body {
+		font-family: 'Poppins', sans-serif;
+		background-color: #fff;
+		margin: 0;
+		padding: 40px;
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+		min-height: 100vh;
+		color: #000;
+	  }
+
+	  .container {
+		max-width: 700px;
+		text-align: left;
+	  }
+
+	  h1 {
+		font-size: 3rem;
+		font-weight: bold;
+		margin-bottom: 20px;
+		line-height: 1.1;
+		text-transform: uppercase;
+	  }
+
+	  .contents-box {
+		border: 3px solid #000;
+		padding: 20px 30px;
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 15px 40px;
+		font-size: 1.1rem;
+	  }
+
+	  .contents-box li {
+		list-style: none;
+		display: flex;
+		align-items: baseline;
+		font-weight: normal;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	  }
+
+	  .contents-box li span.page {
+		font-weight: bold;
+		font-size: 1.3rem;
+		margin-right: 10px;
+	  }
+
+	  a {
+		text-decoration: none;
+		color: #000;
+	  }
+
+	  a.disabled {
+		color: #aaa;
+		pointer-events: none;
+		cursor: not-allowed;
+	  }
+
+	  a:hover:not(.disabled) {
+		text-decoration: underline;
+	  }
+
+	  .logout {
+		margin-top: 20px;
+		display: inline-block;
+		font-size: 1rem;
+		color: #0078D4;
+	  }
+
+	  /* Profile menu */
+	  .profile-menu {
+		position: fixed;
+		top: 20px;
+		right: 20px;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		z-index: 1000;
+	  }
+
+	  .avatar {
+		width: 50px;
+		height: 50px;
+		background-color: #0078D4;
+		color: #fff;
+		font-weight: bold;
+		font-size: 1.2rem;
+		border-radius: 50%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		cursor: pointer;
+		overflow: hidden;
+	  }
+
+	  .avatar img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 50%;
+	  }
+
+	  .dropdown {
+		display: none;
+		background: #fff;
+		border: 1px solid #ccc;
+		border-radius: 8px;
+		margin-top: 10px;
+		box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+		width: 150px;
+	  }
+
+	  .dropdown a {
+		display: block;
+		padding: 10px 20px;
+		text-decoration: none;
+		color: #333;
+	  }
+
+	  .dropdown a:hover {
+		background-color: #f0f0f0;
+	  }
+
+  </style>
+</head>
+<body>
+
+<div class="profile-menu">
+  <div class="avatar" id="avatar"></div>
+  <div class="dropdown" id="dropdown">
+	<p><a href="profile_final.html">Profile</a></p>
+	<p><a href="settings.html">Settings</a></p>
+	<p><a href="login_final.html">Logout</a></p>
+  </div>
+</div>
+
+  <div class="container">
+    <h1>Table<br>of Contents</h1>
+	  <ul class="contents-box" id="links">
+		<li><span class="page">1</span><a href="client_reports.html" data-page="client_reports.html">Client Reports</a></li>
+		<li><span class="page">2</span><a href="risk_metrics.html" data-page="risk_metrics.html">Risk Metrics</a></li>
+		<li><span class="page">3</span><a href="portfolio_breakdowns.html" data-page="portfolio_breakdowns.html">Portfolio Breakdowns</a></li>
+		<li><span class="page">4</span><a href="portfolio_holdings.html" data-page="portfolio_holdings.html">Portfolio Holdings</a></li>
+		<li><span class="page">5</span><a href="liquidity_ladders.html" data-page="liquidity_ladders.html">Liquidity Ladders</a></li>
+		<li><span class="page">6</span><a href="portfolio_turnover.html" data-page="portfolio_turnover.html">Portfolio Turnover</a></li>
+	  </ul>
+	  <p><a href="login_final.html">Logout</a></p>
+  <script>
+	  const allowedEmails = {
+		"client_reports.html": ["joseph.pascoe@lgim.com", "admin@example.com"],
+		"risk_metrics.html": ["amelia.allen@lgim.com", "admin@example.com"],
+		"portfolio_breakdowns.html": ["joseph.pascoe@lgim.com", "admin@example.com"],
+		"portfolio_holdings.html": ["amelia.allen@lgim.com", "admin@example.com"],
+		"liquidity_ladders.html": ["joseph.pascoe@lgim.com", "amelia.allen@lgim.com"],
+		"portfolio_turnover.html": ["amelia.allen@lgim.com", "admin@example.com"]
+	  };
+
+	  const email = localStorage.getItem("loggedInEmail");
+	  const links = document.querySelectorAll("#links a");
+
+	  if (!email) {
+		alert("You must log in first.");
+		window.location.href = "login_final.html";
+	  } else {
+		links.forEach(link => {
+		  const page = link.getAttribute("data-page");
+		  const authorised = allowedEmails[page]?.includes(email);
+
+		  if (!authorised) {
+			link.classList.add("disabled");
+			link.setAttribute("title", "Access denied");
+			link.addEventListener("click", function(e) {
+			  e.preventDefault();
+			  alert("Access denied. You are not authorised to view this page.");
+			});
+		  }
+		});
+	  }
+
+	  // Profile avatar logic
+	  const avatar = document.getElementById("avatar");
+	  const dropdown = document.getElementById("dropdown");
+	  const profilePic = localStorage.getItem("profilePic");
+
+	  if (profilePic) {
+		avatar.innerHTML = `${profilePic}`;
+	  } else if (email) {
+		const initials = email.split("@")[0].slice(0, 2).toUpperCase();
+		avatar.textContent = initials;
+	  }
+
+	  avatar.addEventListener("mouseenter", () => dropdown.style.display = "block");
+	  avatar.addEventListener("mouseleave", () => setTimeout(() => dropdown.style.display = "none", 300));
+	  dropdown.addEventListener("mouseenter", () => dropdown.style.display = "block");
+	  dropdown.addEventListener("mouseleave", () => dropdown.style.display = "none");
+
+	  // Logout
+	  document.getElementById("logout").addEventListener("click", () => {
+		localStorage.removeItem("loggedInEmail");
+		window.location.href = "login_final.html";
+	  });
+  </script>
+</body>
+</html>
+

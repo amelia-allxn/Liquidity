@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Profile Page</title>
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Profile menu (top-right corner) */
+  .profile-menu {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    z-index: 1000;
+  }
+
+  .avatar {
+    width: 50px;
+    height: 50px;
+    background-color: #0078D4;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.2rem;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .dropdown {
+    display: none;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-top: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    width: 150px;
+  }
+
+  .dropdown a {
+    display: block;
+    padding: 10px 20px;
+    text-decoration: none;
+    color: #333;
+  }
+
+  .dropdown a:hover {
+    background-color: #f0f0f0;
+  }
+
+  /* Profile card */
+  .card {
+    background: linear-gradient(135deg, #0078D4 0%, #ffe680 33%, #ff4d4d 66%, #00a651 100%);
+    width: 450px;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    text-align: center;
+    position: relative;
+    margin: 100px auto;
+  }
+
+  .logo {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 80px;
+  }
+
+  h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  input[type="password"], input[type="file"] {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 14px;
+    background-color: #0078D4;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    text-transform: uppercase;
+  }
+
+  .btn:hover {
+    background-color: #005fa3;
+  }
+
+  .error { color: red; display: none; margin-bottom: 10px; }
+  .success { color: green; display: none; margin-bottom: 10px; }
+  img#preview { max-width: 100px; margin-top: 10px; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<!-- Profile Menu -->
+<div class="profile-menu">
+  <div class="avatar" id="avatar"></div>
+  <div class="dropdown" id="dropdown">
+	<p><a href="settings.html">Settings</a></p>
+	<p><a href="login_final.html">Logout</a></p>
+  </div>
+</div>
+
+<!-- Profile Card -->
+<div class="card">
+  <img src="C:\Users\XA00001\Downloads\logo.jpg" alt="Legal & General Logo" class="logo">
+  <h2>Profile</h2>
+  <p id="userEmail" style="font-weight:bold;"></p>
+
+  <!-- Password Change -->
+  <form id="passwordForm">
+    <div class="form-group">
+      <input type="password" id="currentPassword" placeholder="Current Password" required>
+    </div>
+    <div class="form-group">
+      <input type="password" id="newPassword" placeholder="New Password" required>
+    </div>
+    <div class="form-group">
+      <input type="password" id="confirmNewPassword" placeholder="Confirm New Password" required>
+    </div>
+    <div class="error" id="passwordError">Password change failed.</div>
+    <div class="success" id="passwordSuccess">Password changed successfully.</div>
+    <button class="btn" type="submit">Change Password</button>
+  </form>
+
+  <hr>
+
+  <!-- Profile Picture -->
+  <form id="imageForm">
+    <input type="file" id="profilePic" accept="image/*">
+    <img id="preview" src="" alt="Profile Preview">
+  </form>
+
+	 <p><a href="contents.html">Back to Contents</a></p>
+</div>
+
+<script>
+  const email = localStorage.getItem("loggedInEmail");
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  document.getElementById("userEmail").textContent = email ? `Logged in as: ${email}` : "";
+
+  // Avatar logic
+  const avatar = document.getElementById("avatar");
+  const dropdown = document.getElementById("dropdown");
+  const profilePic = localStorage.getItem("profilePic");
+
+  if (profilePic) {
+    avatar.innerHTML = `${profilePic}`;
+  } else if (email) {
+    const initials = email.split("@")[0].slice(0, 2).toUpperCase();
+    avatar.textContent = initials;
+  }
+
+  avatar.addEventListener("mouseenter", () => dropdown.style.display = "block");
+  avatar.addEventListener("mouseleave", () => setTimeout(() => dropdown.style.display = "none", 300));
+  dropdown.addEventListener("mouseenter", () => dropdown.style.display = "block");
+  dropdown.addEventListener("mouseleave", () => dropdown.style.display = "none");
+
+  // Logout
+  document.getElementById("logout").addEventListener("click", () => {
+    localStorage.removeItem("loggedInEmail");
+    window.location.href = "login_final.html";
+  });
+
+  // Password change
+  document.getElementById("passwordForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const current = document.getElementById("currentPassword").value;
+    const newPass = document.getElementById("newPassword").value;
+    const confirmNew = document.getElementById("confirmNewPassword").value;
+    const error = document.getElementById("passwordError");
+    const success = document.getElementById("passwordSuccess");
+
+    if (users[email] === current && newPass === confirmNew) {
+      users[email] = newPass;
+      localStorage.setItem("users", JSON.stringify(users));
+      error.style.display = "none";
+      success.style.display = "block";
+    } else {
+      error.style.display = "block";
+      success.style.display = "none";
+    }
+  });
+
+  // Profile picture upload
+  document.getElementById("profilePic").addEventListener("change", function() {
+    const file = this.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById("preview").src = e.target.result;
+        localStorage.setItem("profilePic", e.target.result);
+        avatar.innerHTML = `${e.target.result}`;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+</script>
+</body>
+</html>
+

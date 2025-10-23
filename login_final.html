@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+<style>
+  body {
+	font-family: 'Poppins', sans-serif;
+	background-color: #fffff;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	margin: 0;
+  }
+
+  .card {
+	background: linear-gradient(135deg, #0078D4 0%, #ffe680 33%, #ff4d4d 66%, #00a651 100%);
+	width: 420px;
+	padding: 40px;
+	border-radius: 20px;
+	box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+	position: relative;
+	text-align: center;
+  }
+
+  .logo {
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	width: 100px;
+  }
+
+  h2 {
+	font-size: 2rem;
+	font-weight: 600;
+	margin-bottom: 30px;
+	text-transform: uppercase;
+  }
+
+  .form-group {
+	margin-bottom: 20px;
+	position: relative;
+  }
+
+  .form-group input {
+	width: 100%;
+	padding: 14px;
+	border: 1px solid #ccc;
+	border-radius: 10px;
+	font-size: 1rem;
+	text-align: center;
+  }
+
+  .checkbox-group {
+	text-align: left;
+	font-size: 0.9rem;
+	margin-bottom: 10px;
+  }
+
+  .btn {
+	width: 100%;
+	padding: 14px;
+	background-color: #0078D4;
+	color: #fff;
+	border: none;
+	border-radius: 10px;
+	font-size: 1rem;
+	font-weight: bold;
+	cursor: pointer;
+	margin-top: 10px;
+	text-transform: uppercase;
+  }
+
+  .btn:hover {
+	background-color: #005fa3;
+  }
+
+  .footer-text {
+	margin-top: 20px;
+	font-size: 0.95rem;
+  }
+
+  .footer-text a {
+	color: #0078D4;
+	text-decoration: none;
+	font-weight: bold;
+  }
+
+  .error {
+	color: red;
+	display: none;
+	margin-bottom: 10px;
+  }
+</style>
+</head>
+<body>
+    <div class="card">
+	<img src="C:\Users\XA00001\Downloads\logo.jpg" alt="Legal & General Logo" class="logo">
+        <h2>Login</h2>
+		<form id="loginForm">
+		  <div class="form-group">
+			<input type="email" id="email" placeholder="Email" required>
+		  </div>
+		  <div class="form-group">
+			<input type="password" id="password" placeholder="Password" required>
+		  </div>
+		  <div class="checkbox-group">
+			<input type="checkbox" id="showPassword"> <label for="showPassword">Show Password</label>
+		  </div>
+		  <div class="checkbox-group">
+			<input type="checkbox" id="rememberMe"> <label for="rememberMe">Remember Me</label>
+		  </div>
+		  <div class="error" id="errorMessage">Invalid email or password.</div>
+		  <button class="btn" type="submit">Login</button>
+		</form>
+
+        <p><a href="create_account_final.html">Create Account</a></p>
+    </div>
+	<script>
+		// Pre-fill email if remembered
+		window.addEventListener("DOMContentLoaded", function() {
+			const rememberedEmail = localStorage.getItem("rememberedEmail");
+			if (rememberedEmail) {
+				document.getElementById("email").value = rememberedEmail;
+				document.getElementById("rememberMe").checked = true;
+			}
+		});
+
+		// Show password toggle
+		document.getElementById("showPassword").addEventListener("change", function() {
+			document.getElementById("password").type = this.checked ? "text" : "password";
+		});
+
+		// Login form submission
+		document.getElementById("loginForm").addEventListener("submit", function(e) {
+			e.preventDefault();
+			const email = document.getElementById("email").value.trim();
+			const password = document.getElementById("password").value;
+			const rememberMe = document.getElementById("rememberMe").checked;
+			const users = JSON.parse(localStorage.getItem("users") || "{}");
+			const errorMessage = document.getElementById("errorMessage");
+
+			if (users[email] === password) {
+				errorMessage.style.display = "none";
+				localStorage.setItem("loggedInEmail", email);
+				if (rememberMe) {
+					localStorage.setItem("rememberedEmail", email);
+				} else {
+					localStorage.removeItem("rememberedEmail");
+				}
+				window.location.href = "contents.html";
+			} else {
+				errorMessage.style.display = "block";
+			}
+		});
+	</script>
+</body>
+</html>
+
+
